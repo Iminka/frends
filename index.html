@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fbe4ee">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Счётчик дружбы">
+<title>Счётчик дружбы</title>
+<style>
+  :root {
+    --pink: #f7b6cd;
+    --pink-dark: #ee93b4;
+    --lavender: #d9c8f0;
+    --lavender-dark: #c3aae6;
+    --text: #6b4a5c;
+    --soft: #a98a9b;
+    --spring: cubic-bezier(.34, 1.56, .64, 1);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { min-height: 100%; }
+  body {
+    margin: 0; min-height: 100vh;
+    color: var(--text);
+    font-family: -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, #ffd9e8 0, transparent 45%),
+      radial-gradient(circle at 85% 25%, #e3d5f8 0, transparent 45%),
+      radial-gradient(circle at 30% 90%, #ffe6d9 0, transparent 50%),
+      #fdf6f9;
+    background-attachment: fixed;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 24px 18px 48px; position: relative; }
+  h1 { text-align: center; margin: 8px 0 2px; color: var(--pink-dark); font-size: 30px; }
+  .sub { text-align: center; color: var(--soft); font-size: 14px; margin-bottom: 20px; }
+
+  /* Стеклянная панель */
+  .glass {
+    background: linear-gradient(135deg, rgba(255,255,255,.65), rgba(255,255,255,.25));
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+    border: 1px solid rgba(255,255,255,.7);
+    box-shadow:
+      0 8px 28px rgba(238,147,180,.22),
+      inset 0 1px 0 rgba(255,255,255,.9),
+      inset 0 -1px 0 rgba(255,255,255,.3);
+  }
+  .form { border-radius: 28px; padding: 16px; display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  input {
+    width: 100%; min-width: 0; max-width: 100%; height: 46px; border-radius: 23px;
+    -webkit-appearance: none; appearance: none; display: block;
+    border: 1px solid rgba(255,255,255,.8);
+    background: rgba(255,255,255,.55);
+    box-shadow: inset 0 2px 6px rgba(238,147,180,.15);
+    color: var(--text); padding: 0 18px; font-size: 16px; outline: none;
+    transition: transform .35s var(--spring), box-shadow .25s, background .25s;
+  }
+  input[type=date] { text-align: left; }
+  input:focus {
+    background: rgba(255,255,255,.85);
+    transform: scale(1.025);
+    box-shadow: inset 0 2px 6px rgba(238,147,180,.1), 0 0 0 3px rgba(238,147,180,.35);
+  }
+  .label { font-size: 13px; color: var(--soft); margin: 2px 0 -4px 10px; }
+
+  /* Стеклянные кнопки: растут и "жидко" блестят */
+  .gbtn {
+    position: relative; overflow: hidden; isolation: isolate;
+    border: 1px solid rgba(255,255,255,.75);
+    color: #fff; font-weight: 700; cursor: pointer;
+    background: linear-gradient(135deg, rgba(247,150,190,.85), rgba(238,147,180,.6));
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    backdrop-filter: blur(10px) saturate(180%);
+    box-shadow:
+      0 6px 18px rgba(238,147,180,.45),
+      inset 0 1px 1px rgba(255,255,255,.95),
+      inset 0 -6px 12px rgba(255,255,255,.18);
+    text-shadow: 0 1px 2px rgba(180,80,120,.4);
+    transition: transform .4s var(--spring), box-shadow .3s ease, filter .3s ease;
+    touch-action: manipulation;
+    -webkit-appearance: none; appearance: none;
+    font-family: inherit;
+  }
+  /* блик, который скользит по кнопке */
+  .gbtn::before {
+    content: ""; position: absolute; z-index: 0; pointer-events: none;
+    top: 0; left: -80%; width: 60%; height: 100%;
+    background: linear-gradient(105deg, transparent, rgba(255,255,255,.65), transparent);
+    transform: skewX(-18deg);
+    transition: left .7s ease;
+  }
+  /* верхний стеклянный отсвет */
+  .gbtn::after {
+    content: ""; position: absolute; z-index: 0; pointer-events: none;
+    top: 2px; left: 8%; width: 84%; height: 45%;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0));
+  }
+  .gbtn.lav {
+    background: linear-gradient(135deg, rgba(200,176,240,.9), rgba(180,150,230,.65));
+    box-shadow:
+      0 6px 18px rgba(180,150,230,.45),
+      inset 0 1px 1px rgba(255,255,255,.95),
+      inset 0 -6px 12px rgba(255,255,255,.18);
+  }
+  @media (hover: hover) {
+    .gbtn:hover {
+      transform: scale(1.09);
+      filter: brightness(1.06) saturate(1.1);
+      box-shadow:
+        0 12px 30px rgba(238,147,180,.55),
+        inset 0 1px 1px rgba(255,255,255,1),
+        inset 0 -8px 14px rgba(255,255,255,.25);
+    }
+    .gbtn:hover::before { left: 130%; }
+  }
+  .gbtn:active { transform: scale(1.07); transition-duration: .15s; }
+  .gbtn.pressing { transform: scale(1.09); filter: brightness(1.06); }
+  .gbtn.pressing::before { left: 130%; }
+
+  button.add { height: 50px; border-radius: 25px; font-size: 17px; }
+  #error { color: #d9668f; font-size: 14px; text-align: center; min-height: 18px; }
+
+  #list { margin-top: 20px; display: grid; gap: 14px; }
+  .card {
+    border-radius: 24px; padding: 14px 16px;
+    animation: pop .45s var(--spring);
+    transition: transform .4s var(--spring), box-shadow .3s;
+  }
+  @media (hover: hover) {
+    .card:hover { transform: scale(1.025); box-shadow: 0 14px 34px rgba(238,147,180,.32), inset 0 1px 0 rgba(255,255,255,.95); }
+  }
+  @keyframes pop { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .names { font-size: 18px; font-weight: 700; word-break: break-word; }
+  .heart { color: var(--pink-dark); }
+  .del { flex: none; width: 34px; height: 34px; border-radius: 50%; font-size: 14px; padding: 0; }
+  .days { color: var(--pink-dark); font-size: 28px; font-weight: 800; margin-top: 4px; }
+  .full { color: var(--soft); font-size: 13px; margin-top: 2px; }
+  .empty { text-align: center; color: var(--soft); padding: 36px 0; }
+
+  .float { position: fixed; pointer-events: none; z-index: 0; opacity: .4; animation: rise 9s linear infinite; }
+  @keyframes rise { from { transform: translateY(105vh); } to { transform: translateY(-15vh); } }
+  .wrap { z-index: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gbtn, .card, input { transition: none; }
+    .float { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>♡ Счётчик дружбы ♡</h1>
+  <div class="sub">сколько дней мы вместе</div>
+
+  <div class="form glass">
+    <div class="row">
+      <input id="a" type="text" placeholder="Первый" maxlength="30" autocomplete="off">
+      <input id="b" type="text" placeholder="Второй" maxlength="30" autocomplete="off">
+    </div>
+    <div class="label">Когда начали дружить</div>
+    <input id="d" type="date">
+    <div id="error"></div>
+    <button class="gbtn add" id="addBtn">♡ Добавить</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script>
+
+const KEY = "friends_counter_v1";
+let friends = [];
+
+function load() {
+  try { friends = JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch (e) { friends = []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(friends)); }
+  catch (e) { showError("Не удалось сохранить данные в браузере."); }
+}
+
+function plural(n, one, few, many) {
+  const n10 = n % 10, n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return one;
+  if (n10 >= 2 && n10 <= 4 && !(n100 >= 12 && n100 <= 14)) return few;
+  return many;
+}
+
+function parseDate(s) {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function daysBetween(start, today) {
+  const a = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const b = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.round((b - a) / 86400000);
+}
+
+function ymd(start, today) {
+  let y = today.getFullYear() - start.getFullYear();
+  let m = today.getMonth() - start.getMonth();
+  let d = today.getDate() - start.getDate();
+  if (d < 0) { m -= 1; d += 30; }
+  if (m < 0) { y -= 1; m += 12; }
+  return [y, m, d];
+}
+
+function fmt(dateStr) {
+  const [y, m, d] = dateStr.split("-");
+  return d + "." + m + "." + y;
+}
+
+function esc(s) {
+  return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function render() {
+  const list = document.getElementById("list");
+  if (!friends.length) {
+    list.innerHTML = '<div class="empty">♡ Пока пусто. Добавь первую дружбу выше ♡</div>';
+    return;
+  }
+  const today = new Date();
+  list.innerHTML = friends.map((f, i) => {
+    const start = parseDate(f.start);
+    const days = daysBetween(start, today);
+    const [y, m, d] = ymd(start, today);
+    return `
+      <div class="card glass">
+        <div class="top">
+          <div class="names">${esc(f.a)} <span class="heart">♡</span> ${esc(f.b)}</div>
+          <button class="gbtn lav del" data-i="${i}" aria-label="Удалить">✕</button>
+        </div>
+        <div class="days">${days} ${plural(days, "день", "дня", "дней")} вместе</div>
+        <div class="full">${y} ${plural(y, "год", "года", "лет")}, ${m} мес., ${d} дн. · с ${fmt(f.start)}</div>
+      </div>`;
+  }).join("");
+}
+
+function showError(msg) {
+  document.getElementById("error").textContent = msg;
+}
+
+function add() {
+  const a = document.getElementById("a").value.trim();
+  const b = document.getElementById("b").value.trim();
+  const d = document.getElementById("d").value;
+  if (!a || !b) return showError("Введи оба имени.");
+  if (!d) return showError("Выбери дату.");
+  if (parseDate(d) > new Date()) return showError("Дата в будущем, так нельзя.");
+  showError("");
+  friends.push({ a, b, start: d });
+  save();
+  render();
+  document.getElementById("a").value = "";
+  document.getElementById("b").value = "";
+  document.getElementById("d").value = "";
+}
+
+const addBtn = document.getElementById("addBtn");
+let lastAdd = 0;
+function addOnce() {
+  const now = Date.now();
+  if (now - lastAdd < 600) return;
+  lastAdd = now;
+  add();
+}
+addBtn.addEventListener("click", addOnce);
+addBtn.addEventListener("touchend", e => { e.preventDefault(); addOnce(); });
+["a", "b", "d"].forEach(id =>
+  document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") addOnce(); })
+);
+document.getElementById("list").addEventListener("click", e => {
+  const btn = e.target.closest(".del");
+  if (!btn) return;
+  const i = Number(btn.dataset.i);
+  const f = friends[i];
+  if (confirm("Удалить дружбу " + f.a + " и " + f.b + "?")) {
+    friends.splice(i, 1);
+    save();
+    render();
+  }
+});
+
+// плавающие сердечки на фоне
+for (let i = 0; i < 8; i++) {
+  const h = document.createElement("div");
+  h.className = "float";
+  h.textContent = "♡";
+  h.style.left = (Math.random() * 95) + "vw";
+  h.style.fontSize = (16 + Math.random() * 22) + "px";
+  h.style.color = Math.random() > .5 ? "#f7b6cd" : "#d9c8f0";
+  h.style.animationDelay = (-Math.random() * 9) + "s";
+  h.style.animationDuration = (7 + Math.random() * 6) + "s";
+  document.body.appendChild(h);
+}
+
+load();
+render();
+
+window.addEventListener("error", e => {
+  const el = document.getElementById("error");
+  if (el) el.textContent = "Ошибка: " + e.message;
+});
+</script>
+</body>
+</html>
